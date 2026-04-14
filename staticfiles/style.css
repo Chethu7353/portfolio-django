@@ -105,3 +105,42 @@ nav {
   border-radius: 10px;
   flex: 1;
 }
+/* --- Social Links Styling --- */
+.social-links {
+    margin-top: 15px;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap; /* Ensures buttons don't break the layout on small screens */
+}
+
+.social-links a {
+    text-decoration: none;
+    padding: 8px 12px;
+    border-radius: 5px;
+    font-size: 14px;
+    font-weight: bold;
+    color: white;
+    transition: opacity 0.3s ease;
+}
+
+/* LinkedIn specific color */
+.social-links a:nth-child(1) {
+    background-color: #0077b5; 
+}
+
+/* GitHub specific color */
+.social-links a:nth-child(2) {
+    background-color: #333333; 
+}
+
+/* LeetCode specific color */
+.social-links a:nth-child(3) {
+    background-color: #ffa116; 
+    color: black; /* Black text reads better on the yellow/orange background */
+}
+
+/* Hover effect */
+.social-links a:hover {
+    opacity: 0.8;
+}

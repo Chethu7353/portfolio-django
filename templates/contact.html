@@ -1,75 +1,81 @@
 {% load static %}
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Contact</title>
-<link rel="stylesheet" href="{% static 'style.css' %}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
 </head>
 
 <body>
 
 <nav>
-<div>
-<img src="{% static 'logo.png' %}" height="40">
-</div>
+    <div>
+        <img src="{% static 'logo.png' %}" height="40" alt="Logo">
+    </div>
 
-<div class="nav-center">
-<a href="/">Home</a>
-<a href="/projects/">Projects</a>
-<a href="/about/">About</a>
-<a href="/contact/">Contact</a>
-</div>
+    <div class="nav-center">
+        <a href="/">Home</a>
+        <a href="/projects/">Projects</a>
+        <a href="/about/">About</a>
+        <a href="/contact/">Contact</a>
+    </div>
 
-<a href="/contact/" class="hire-btn">Hire Me</a>
+    <a href="/contact/" class="hire-btn">Hire Me</a>
 </nav>
 
 <div class="container">
 
-<!-- LEFT -->
-<div class="left">
-<img src="{% static 'profile.jpg' %}">
-<h2>Chetan</h2>
-<p>ML & Data Science Enthusiast</p>
-</div>
+    <div class="left">
+        <img src="{% static 'profile.jpg' %}" alt="Chetan Kumar">
+        <h2>A Chetan Kumar</h2>
+        <p>ML & Data Science Enthusiast</p>
+        
+        <div class="social-links">
+            <a href="https://www.linkedin.com/in/a-chetan-kumar-74235b328/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+            <a href="https://github.com/Chethu7353" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <a href="https://leetcode.com/u/A_Chetan_Kumar/" target="_blank" rel="noopener noreferrer">LeetCode</a>
+        </div>
+    </div>
 
-<!-- RIGHT -->
-<div class="right">
+    <div class="right">
+        <h1>Contact Me</h1>
 
-<h1>Contact Me</h1>
+        <div class="feature">
+            <form id="contactForm">
+                <input type="text" id="name" placeholder="Your Name" required>
+                <input type="email" id="email" placeholder="Your Email" required>
+                <textarea id="message" placeholder="Your Message" required></textarea>
 
-<div class="feature">
-
-<form id="contactForm">
-<input type="text" id="name" placeholder="Your Name" required>
-<input type="email" id="email" placeholder="Your Email" required>
-<textarea id="message" placeholder="Your Message"></textarea>
-
-<button type="submit">Send Message</button>
-</form>
-
-</div>
-
-</div>
+                <button type="submit">Send Message</button>
+            </form>
+        </div>
+    </div>
 
 </div>
 
 <script>
 document.getElementById("contactForm").addEventListener("submit", async function(e) {
-e.preventDefault();
+    e.preventDefault();
 
-const data = {
-name: document.getElementById("name").value,
-email: document.getElementById("email").value,
-message: document.getElementById("message").value
-};
+    const data = {
+        name: document.getElementById("name").value,
+        email: document.getElementById("email").value,
+        message: document.getElementById("message").value
+    };
 
-await fetch("/api/contact/", {
-method: "POST",
-headers: {"Content-Type": "application/json"},
-body: JSON.stringify(data)
-});
-
-alert("Message sent successfully!");
+    try {
+        await fetch("/api/contact/", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify(data)
+        });
+        alert("Message sent successfully!");
+        document.getElementById("contactForm").reset(); // Clears the form after sending
+    } catch (error) {
+        alert("There was an error sending your message. Please try again.");
+    }
 });
 </script>
 
