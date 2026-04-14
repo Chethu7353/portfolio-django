@@ -1,0 +1,64 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+<title>Projects</title>
+<link rel="stylesheet" href="{% static 'style.css' %}">
+</head>
+
+<body>
+
+<nav>
+<div>
+<img src="{% static 'logo.png' %}" height="40">
+</div>
+
+<div class="nav-center">
+<a href="/">Home</a>
+<a href="/projects/">Projects</a>
+<a href="/about/">About</a>
+<a href="/contact/">Contact</a>
+</div>
+
+<a href="/contact/" class="hire-btn">Hire Me</a>
+</nav>
+
+<div class="container">
+
+<!-- LEFT -->
+<div class="left">
+<img src="{% static 'profile.jpg' %}">
+<h2>Chetan</h2>
+<p>ML & Data Science Enthusiast</p>
+</div>
+
+<!-- RIGHT -->
+<div class="right">
+
+<h1>All Projects</h1>
+
+<div class="grid">
+
+<div class="card">
+<h4>Smart Attendance Monitoring System</h4>
+<p>IoT + Backend system for real-time attendance tracking.</p>
+</div>
+
+<div class="card">
+<h4>Data Dashboard</h4>
+<p>Python-based data visualization project.</p>
+</div>
+
+<div class="card">
+<h4>Portfolio Website</h4>
+<p>Responsive personal portfolio built using Django.</p>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</body>
+</html>

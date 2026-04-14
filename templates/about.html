@@ -1,0 +1,55 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+<title>About</title>
+<link rel="stylesheet" href="{% static 'style.css' %}">
+</head>
+
+<body>
+
+<nav>
+<div>
+<img src="{% static 'logo.png' %}" height="40">
+</div>
+
+<div class="nav-center">
+<a href="/">Home</a>
+<a href="/projects/">Projects</a>
+<a href="/about/">About</a>
+<a href="/contact/">Contact</a>
+</div>
+
+<a href="/contact/" class="hire-btn">Hire Me</a>
+</nav>
+
+<div class="container">
+
+<!-- LEFT SAME -->
+<div class="left">
+<img src="{% static 'profile.jpg' %}">
+<h2>Chetan</h2>
+<p>ML & Data Science Enthusiast</p>
+<p>Passionate CS student building smart solutions.</p>
+</div>
+
+<!-- RIGHT CONTENT -->
+<div class="right">
+
+<h1>About Me</h1>
+
+<div class="feature">
+<p>
+I am a Computer Science student passionate about Machine Learning,
+Data Science, and building real-world intelligent systems.
+
+I enjoy solving problems, working with data, and creating impactful projects.
+</p>
+</div>
+
+</div>
+
+</div>
+
+</body>
+</html>

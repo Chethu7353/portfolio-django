@@ -1,0 +1,77 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+<title>Contact</title>
+<link rel="stylesheet" href="{% static 'style.css' %}">
+</head>
+
+<body>
+
+<nav>
+<div>
+<img src="{% static 'logo.png' %}" height="40">
+</div>
+
+<div class="nav-center">
+<a href="/">Home</a>
+<a href="/projects/">Projects</a>
+<a href="/about/">About</a>
+<a href="/contact/">Contact</a>
+</div>
+
+<a href="/contact/" class="hire-btn">Hire Me</a>
+</nav>
+
+<div class="container">
+
+<!-- LEFT -->
+<div class="left">
+<img src="{% static 'profile.jpg' %}">
+<h2>Chetan</h2>
+<p>ML & Data Science Enthusiast</p>
+</div>
+
+<!-- RIGHT -->
+<div class="right">
+
+<h1>Contact Me</h1>
+
+<div class="feature">
+
+<form id="contactForm">
+<input type="text" id="name" placeholder="Your Name" required>
+<input type="email" id="email" placeholder="Your Email" required>
+<textarea id="message" placeholder="Your Message"></textarea>
+
+<button type="submit">Send Message</button>
+</form>
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+document.getElementById("contactForm").addEventListener("submit", async function(e) {
+e.preventDefault();
+
+const data = {
+name: document.getElementById("name").value,
+email: document.getElementById("email").value,
+message: document.getElementById("message").value
+};
+
+await fetch("/api/contact/", {
+method: "POST",
+headers: {"Content-Type": "application/json"},
+body: JSON.stringify(data)
+});
+
+alert("Message sent successfully!");
+});
+</script>
+
+</body>
+</html>

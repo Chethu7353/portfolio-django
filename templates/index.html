@@ -1,0 +1,83 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+<title>Portfolio</title>
+<link rel="stylesheet" href="{% static 'style.css' %}">
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<nav>
+
+<!-- LEFT LOGO -->
+<div>
+<img src="{% static 'logo.png' %}" height="40">
+</div>
+
+<!-- CENTER MENU -->
+<div class="nav-center">
+<a href="/">Home</a>
+<a href="/projects/">Projects</a>
+<a href="/about/">About</a>
+<a href="/contact/">Contact</a>
+</div>
+
+<!-- RIGHT BUTTON -->
+<a href="/contact/" class="hire-btn">Hire Me</a>
+
+</nav>
+
+<!-- MAIN -->
+<div class="container">
+
+<!-- LEFT SIDE -->
+<div class="left">
+<img src="{% static 'profile.jpg' %}">
+<h2>Chetan</h2>
+<p>ML & Data Science Enthusiast</p>
+<p>Passionate CS student building smart solutions.</p>
+</div>
+
+<!-- RIGHT SIDE -->
+<div class="right">
+
+<h1>Featured Project</h1>
+
+<div class="feature">
+<h3>Smart Cooking Machine 🔍</h3>
+<p>IoT-based cooking assistant for students.</p>
+<button>View Project</button>
+</div>
+
+<div class="projects">
+<h2>All Projects</h2>
+
+<div class="grid">
+
+<div class="card">
+<h4>Portfolio Website</h4>
+<p>Personal responsive website.</p>
+</div>
+
+<div class="card">
+<h4>Data Dashboard</h4>
+<p>Visualized datasets using Python.</p>
+</div>
+
+<div class="card">
+<h4>Smart Cooking</h4>
+<p>Automation + IoT cooking system.</p>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</body>
+</html>
