@@ -1,101 +1,88 @@
 {% load static %}
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Portfolio</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chetan Portfolio</title>
 <link rel="stylesheet" href="{% static 'style.css' %}">
 </head>
 
 <body>
 
-<!-- NAVBAR -->
-<nav>
+<!-- Navbar -->
+<header class="navbar">
+    <div class="logo">
+        <img src="{% static 'logo.png' %}" alt="logo">
+    </div>
 
-<!-- LEFT LOGO -->
-<div>
-<img src="{% static 'logo.png' %}" height="40">
-</div>
+    <nav>
+        <a href="/">Home</a>
+        <a href="/projects/">Projects</a>
+        <a href="/about/">About</a>
+        <a href="/contact/">Contact</a>
+    </nav>
 
-<!-- CENTER MENU -->
-<div class="nav-center">
-<a href="/">Home</a>
-<a href="/projects/">Projects</a>
-<a href="/about/">About</a>
-<a href="/contact/">Contact</a>
-</div>
+    <a href="{% static 'resume.pdf' %}" target="_blank" class="btn">Resume</a>
+</header>
 
-<!-- RIGHT BUTTON -->
-<a href="/contact/" class="hire-btn">Hire Me</a>
+<!-- Main Section -->
+<section class="main">
 
-</nav>
+    <!-- LEFT PROFILE -->
+    <div class="left">
+        <img src="{% static 'profile.jpg' %}" class="profile">
 
-<!-- MAIN -->
-<div class="container">
+        <h2>A Chetan Kumar</h2>
+        <p class="role">Machine Learning & Data Science Enthusiast</p>
 
-<!-- LEFT SIDE -->
-<div class="left">
-<img src="{% static 'profile.jpg' %}">
-<h2>Chetan</h2>
-<p>ML & Data Science Enthusiast</p>
-<p>Passionate CS student building smart solutions.</p>
-</div>
+        <p class="desc">
+            CSDS student passionate about building real-world ML, IoT, and system-based applications.
+        </p>
+    </div>
 
-<!-- RIGHT SIDE -->
-<div class="right">
+    <!-- RIGHT SIDE -->
+    <div class="right">
 
-<h1>Featured Project</h1>
+        <h1 class="title">Featured Projects</h1>
 
-<div class="feature">
-<h3>AABO – AI Digital Assistant 🤖</h3>
+        <!-- AABO -->
+        <div class="feature-box">
+            <h3>AABO – Smart Campus Assistant 🤖</h3>
 
-<p>
-AABO is an AI-powered digital assistant kiosk that interacts with users using computer vision and voice communication.
-It detects human presence, greets users, listens to their queries, and provides intelligent responses in real time.
-</p>
+            <p>
+                AABO is designed as a smart kiosk-style assistant for colleges. It interacts with users through voice input,
+                processes queries, and provides instant spoken responses along with visual feedback.
+            </p>
 
-<p>
-<strong>Features:</strong><br>
-• Real-time face detection using OpenCV<br>
-• Voice interaction (speech-to-text & text-to-speech)<br>
-• Intelligent response system using keyword logic<br>
-• Mobile camera integration for live video processing
-</p>
+            <p>
+                The system improves user experience in campus environments by reducing dependency on manual help desks
+                and enabling quick, automated assistance.
+            </p>
+        </div>
 
-<p>
-<strong>Tech Stack:</strong><br>
-Python, OpenCV, SpeechRecognition, pyttsx3
-</p>
+        <!-- AirDeck -->
+        <div class="feature-box">
 
-<p>
-<strong>Use Cases:</strong><br>
-Smart campus assistant, digital reception system, and interactive information kiosk.
-</p>
+            <h3>AirDeck – Remote Control System 💻📱</h3>
 
-<button>View Project</button>
-</div>
+            <p>
+                AirDeck enables seamless mobile-to-laptop control through secure authentication, QR-based pairing,
+                and real-time cursor interaction using Flask and PyAutoGUI.
+            </p>
 
-<div class="projects">
-<h2>All Projects</h2>
+            <ul>
+                <li>Built a <strong>remote control system</strong> using Flask and PyAutoGUI</li>
+                <li>Implemented <strong>OTP-based authentication</strong> with QR device pairing</li>
+                <li>Enabled <strong>real-time cursor and system control</strong> from mobile</li>
+                <li>Designed a <strong>secure client-server communication workflow</strong></li>
+            </ul>
 
-<div class="grid">
+        </div>
 
-<div class="card">
-<h4>Portfolio Website</h4>
-<p>Personal responsive website.</p>
-</div>
+    </div>
 
-<div class="card">
-<h4>Data Dashboard</h4>
-<p>Visualized datasets using Python.</p>
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
+</section>
 
 </body>
 </html>
