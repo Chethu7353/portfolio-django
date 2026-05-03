@@ -10,10 +10,10 @@
 
 <body>
 
-<!-- Navbar -->
+<!-- NAVBAR -->
 <header class="navbar">
     <div class="logo">
-        <img src="{% static 'logo.png' %}" alt="logo">
+        <img src="{% static 'logo.png' %}">
     </div>
 
     <nav>
@@ -26,10 +26,10 @@
     <a href="{% static 'resume.pdf' %}" target="_blank" class="btn">Resume</a>
 </header>
 
-<!-- Main Section -->
+<!-- MAIN -->
 <section class="main">
 
-    <!-- LEFT PROFILE -->
+    <!-- LEFT -->
     <div class="left">
         <img src="{% static 'profile.jpg' %}" class="profile">
 
@@ -41,43 +41,39 @@
         </p>
     </div>
 
-    <!-- RIGHT SIDE -->
+    <!-- RIGHT -->
     <div class="right">
 
         <h1 class="title">Featured Projects</h1>
 
         <!-- AABO -->
-        <div class="feature-box">
+        <div class="card">
             <h3>AABO – Smart Campus Assistant 🤖</h3>
 
             <p>
-                AABO is designed as a smart kiosk-style assistant for colleges. It interacts with users through voice input,
-                processes queries, and provides instant spoken responses along with visual feedback.
+                AABO is a smart kiosk assistant that interacts using voice, processes queries,
+                and provides real-time spoken and visual responses.
             </p>
 
             <p>
-                The system improves user experience in campus environments by reducing dependency on manual help desks
-                and enabling quick, automated assistance.
+                Improves campus experience by reducing dependency on manual help desks.
             </p>
         </div>
 
         <!-- AirDeck -->
-        <div class="feature-box">
-
+        <div class="card">
             <h3>AirDeck – Remote Control System 💻📱</h3>
 
             <p>
-                AirDeck enables seamless mobile-to-laptop control through secure authentication, QR-based pairing,
-                and real-time cursor interaction using Flask and PyAutoGUI.
+                Secure mobile-to-laptop control system using OTP authentication and QR pairing.
             </p>
 
             <ul>
-                <li>Built a <strong>remote control system</strong> using Flask and PyAutoGUI</li>
-                <li>Implemented <strong>OTP-based authentication</strong> with QR device pairing</li>
-                <li>Enabled <strong>real-time cursor and system control</strong> from mobile</li>
-                <li>Designed a <strong>secure client-server communication workflow</strong></li>
+                <li>Flask + PyAutoGUI based control system</li>
+                <li>OTP authentication + QR pairing</li>
+                <li>Real-time cursor & system control</li>
+                <li>Secure client-server workflow</li>
             </ul>
-
         </div>
 
     </div>
