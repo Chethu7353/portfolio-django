@@ -1,84 +1,77 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chetan Portfolio</title>
+<title>Portfolio</title>
 <link rel="stylesheet" href="{% static 'style.css' %}">
 </head>
 
 <body>
 
 <!-- NAVBAR -->
-<header class="navbar">
-    <div class="logo">
+<nav>
+    <div>
         <img src="{% static 'logo.png' %}">
     </div>
 
-    <nav>
+    <div class="nav-center">
         <a href="/">Home</a>
         <a href="/projects/">Projects</a>
         <a href="/about/">About</a>
         <a href="/contact/">Contact</a>
-    </nav>
+    </div>
 
-    <a href="{% static 'resume.pdf' %}" target="_blank" class="btn">Resume</a>
-</header>
+    <a href="{% static 'resume.pdf' %}" class="hire-btn">Resume</a>
+</nav>
 
 <!-- MAIN -->
-<section class="main">
+<div class="container">
 
     <!-- LEFT -->
     <div class="left">
-        <img src="{% static 'profile.jpg' %}" class="profile">
-
-        <h2>A Chetan Kumar</h2>
-        <p class="role">Machine Learning & Data Science Enthusiast</p>
-
-        <p class="desc">
-            CSDS student passionate about building real-world ML, IoT, and system-based applications.
-        </p>
+        <img src="{% static 'profile.jpg' %}">
+        <h2>A Chetan achar</h2>
+        <p>ML & Data Science Enthusiast</p>
     </div>
 
     <!-- RIGHT -->
     <div class="right">
 
-        <h1 class="title">Featured Projects</h1>
+        <h1>Featured Projects</h1>
 
-        <!-- AABO -->
-        <div class="card">
-            <h3>AABO – Smart Campus Assistant 🤖</h3>
+        <div class="grid">
 
-            <p>
-                AABO is a smart kiosk assistant that interacts using voice, processes queries,
-                and provides real-time spoken and visual responses.
-            </p>
+            <!-- AABO -->
+            <div class="card">
+                <h3>AABO – Smart Campus Assistant 🤖</h3>
+                <p>
+                    A smart kiosk assistant that interacts using voice, processes queries,
+                    and provides real-time spoken and visual responses.
+                </p>
+                <p>
+                    Improves campus experience by reducing dependency on manual help desks.
+                </p>
+            </div>
 
-            <p>
-                Improves campus experience by reducing dependency on manual help desks.
-            </p>
-        </div>
+            <!-- AirDeck -->
+            <div class="card">
+                <h3>AirDeck – Remote Control System 💻📱</h3>
+                <p>
+                    Secure mobile-to-laptop control system using OTP authentication and QR pairing.
+                </p>
+                <ul>
+                    <li>Flask + PyAutoGUI control system</li>
+                    <li>OTP authentication + QR pairing</li>
+                    <li>Real-time cursor control</li>
+                </ul>
+            </div>
 
-        <!-- AirDeck -->
-        <div class="card">
-            <h3>AirDeck – Remote Control System 💻📱</h3>
-
-            <p>
-                Secure mobile-to-laptop control system using OTP authentication and QR pairing.
-            </p>
-
-            <ul>
-                <li>Flask + PyAutoGUI based control system</li>
-                <li>OTP authentication + QR pairing</li>
-                <li>Real-time cursor & system control</li>
-                <li>Secure client-server workflow</li>
-            </ul>
         </div>
 
     </div>
 
-</section>
+</div>
 
 </body>
 </html>
