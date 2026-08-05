@@ -1,18 +1,23 @@
 {% load static %}
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<title>Portfolio</title>
-<link rel="stylesheet" href="{% static 'style.css' %}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A Chetan Kumar | Portfolio</title>
+
+    <link rel="stylesheet" href="{% static 'style.css' %}">
 </head>
 
 <body>
 
-<!-- NAVBAR -->
+<!-- ================= NAVBAR ================= -->
+
 <nav>
-    <div>
-        <img src="{% static 'logo.png' %}">
+
+    <div class="logo">
+        <img src="{% static 'logo.png' %}" alt="Logo">
     </div>
 
     <div class="nav-center">
@@ -22,82 +27,213 @@
         <a href="/contact/">Contact</a>
     </div>
 
-    <a href="{% static 'resume.pdf' %}" class="hire-btn">Resume</a>
+    <a href="{% static 'resume.pdf' %}" class="hire-btn">
+        Resume
+    </a>
+
 </nav>
 
-<!-- MAIN -->
+<!-- ================= MAIN ================= -->
+
 <div class="container">
 
-    <!-- LEFT -->
+    <!-- LEFT SIDE -->
+
     <div class="left">
-        <img src="{% static 'profile_photo.jpg' %}">
-        <h2>A Chetan achar</h2>
-        <p>ML & Data Science Enthusiast</p>
+
+        <img
+            src="{% static 'profile_photo.jpg' %}"
+            alt="Profile Photo"
+        >
+
+        <h2>A. Chetan Kumar</h2>
+
+        <p>
+            Machine Learning & Data Science Enthusiast
+        </p>
+
     </div>
 
-    <!-- RIGHT -->
+    <!-- RIGHT SIDE -->
+
     <div class="right">
 
         <h1>Featured Projects</h1>
 
         <div class="grid">
 
-    <!-- GeerGoo -->
-    <div class="card">
-        <h3>GeerGoo – AI Powered Log Intelligence Platform 🤖</h3>
+            <!-- ================================================= -->
+            <!-- GeerGoo -->
+            <!-- ================================================= -->
 
-        <p>
-            A full-stack AI-powered web application that analyzes software
-            log files, automatically detects programming errors, identifies
-            root causes using Google Gemini AI, and provides intelligent
-            fix recommendations through an interactive dashboard.
-        </p>
+            <div class="card">
 
-        <ul>
-            <li>React + TypeScript Frontend</li>
-            <li>Django REST Framework Backend</li>
-            <li>JWT Authentication (Login & Registration)</li>
-            <li>Log File Upload (.log / .txt)</li>
-            <li>Google Gemini AI Integration</li>
-            <li>Rule-Based Error Detection</li>
-            <li>AI Root Cause Analysis & Suggested Fixes</li>
-            <li>Error Severity Classification</li>
-        </ul>
-    </div>
+                <h3>
+                    🤖 GeerGoo – AI Powered Log Intelligence Platform
+                    <br>
+                    <small>(Group Project)</small>
+                </h3>
 
-    <!-- AABO -->
-    <div class="card">
-        <h3>AABO – Smart Campus Assistant 🤖</h3>
+                <p>
 
-        <p>
-            A smart kiosk assistant that interacts using voice,
-            processes queries, and provides real-time spoken
-            and visual responses.
-        </p>
+                    GeerGoo is a full-stack AI-powered web application
+                    that analyzes software log files,
+                    automatically detects programming errors,
+                    identifies root causes using Google Gemini AI,
+                    and provides intelligent fix recommendations
+                    through an interactive dashboard.
 
-        <p>
-            Improves campus experience by reducing dependency
-            on manual help desks.
-        </p>
-    </div>
+                </p>
 
-    <!-- AirDeck -->
-    <div class="card">
-        <h3>AirDeck – Remote Control System 💻📱</h3>
+                <p>
 
-        <p>
-            Secure mobile-to-laptop control system using
-            OTP authentication and QR pairing.
-        </p>
+                    <strong>My Role:</strong>
 
-        <ul>
-            <li>Flask + PyAutoGUI Control System</li>
-            <li>OTP Authentication + QR Pairing</li>
-            <li>Real-Time Cursor Control</li>
-        </ul>
-    </div>
+                    Full Stack Developer
+                    (Backend Development &
+                    Frontend Integration)
 
-</div>
+                </p>
+
+                <ul>
+
+                    <li>Developed REST APIs using Django REST Framework</li>
+
+                    <li>
+                        Implemented Secure JWT Authentication
+                    </li>
+
+                    <li>
+                        Developed Log File Upload &
+                        Processing Module
+                    </li>
+
+                    <li>
+                        Integrated Google Gemini AI
+                        for Intelligent Log Analysis
+                    </li>
+
+                    <li>
+                        Built Rule-Based Error Detection System
+                    </li>
+
+                    <li>
+                        Developed AI Root Cause Analysis &
+                        Suggested Fix Module
+                    </li>
+
+                    <li>
+                        Integrated React Frontend
+                        with Django Backend APIs
+                    </li>
+
+                    <li>
+                        Implemented Error Severity
+                        Classification
+                    </li>
+
+                </ul>
+
+                <p>
+
+                    <strong>Technology Stack</strong>
+
+                    <br>
+
+                    React • TypeScript •
+                    Django REST Framework •
+
+                    Google Gemini AI •
+
+                    JWT Authentication •
+
+                    SQLite •
+
+                    HTML •
+
+                    CSS •
+
+                    Git
+
+                </p>
+
+            </div>
+
+            <!-- ================================================= -->
+            <!-- AABO -->
+            <!-- ================================================= -->
+
+            <div class="card">
+
+                <h3>
+                    🤖 AABO – Smart Campus Assistant
+                </h3>
+
+                <p>
+
+                    A smart campus kiosk assistant that
+                    communicates through voice,
+                    processes user queries,
+                    and provides real-time spoken
+                    and visual responses.
+
+                </p>
+
+                <p>
+
+                    Helps students and visitors by
+                    reducing dependency on manual
+                    help desks.
+
+                </p>
+
+            </div>
+
+            <!-- ================================================= -->
+            <!-- AirDeck -->
+            <!-- ================================================= -->
+
+            <div class="card">
+
+                <h3>
+
+                    💻 AirDeck – Remote Control System
+
+                </h3>
+
+                <p>
+
+                    Secure mobile-to-laptop
+                    remote control system using
+                    OTP authentication
+                    and QR pairing.
+
+                </p>
+
+                <ul>
+
+                    <li>
+                        Flask + PyAutoGUI
+                        Control System
+                    </li>
+
+                    <li>
+                        OTP Authentication
+                    </li>
+
+                    <li>
+                        QR Device Pairing
+                    </li>
+
+                    <li>
+                        Real-Time Cursor &
+                        Keyboard Control
+                    </li>
+
+                </ul>
+
+            </div>
+
         </div>
 
     </div>
@@ -105,4 +241,5 @@
 </div>
 
 </body>
+
 </html>
