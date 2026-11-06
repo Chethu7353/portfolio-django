@@ -3,6 +3,14 @@
   const root = document.documentElement;
   const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  // Helper to retrieve CSRF token from input or cookie
+  function getCsrfToken() {
+    const inputToken = document.querySelector('[name="csrfmiddlewaretoken"]')?.value;
+    if (inputToken) return inputToken;
+    const cookieMatch = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
+    return cookieMatch ? decodeURIComponent(cookieMatch[1]) : '';
+  }
+
   // Color theme: the first visit follows the OS; later visits use the saved choice.
   const themeButton = document.querySelector('.theme-toggle');
   function updateThemeButton() {
@@ -82,32 +90,112 @@
     });
   }
 
-  // CSRF-protected contact form uses the existing Django endpoint.
+  // ==========================================
+  // CONTACT FORM LOGIC & VALIDATION
+  // ==========================================
   const contactForm = document.querySelector('#contact-form');
   const contactStatus = document.querySelector('#contact-status');
+
   contactForm?.addEventListener('submit', async event => {
     event.preventDefault();
-    if (!contactForm.reportValidity()) return;
-    const submit = contactForm.querySelector('[type="submit"]');
-    const csrf = contactForm.querySelector('[name="csrfmiddlewaretoken"]')?.value;
-    const payload = Object.fromEntries(new FormData(contactForm).entries());
-    if (submit) { submit.disabled = true; submit.setAttribute('aria-busy', 'true'); }
-    if (contactStatus) contactStatus.textContent = 'Sending your message…';
+
+    const nameInput = contactForm.querySelector('#contact-name');
+    const emailInput = contactForm.querySelector('#contact-email');
+    const subjectInput = contactForm.querySelector('#contact-subject');
+    const messageInput = contactForm.querySelector('#contact-message');
+    const submitBtn = contactForm.querySelector('.submit-button');
+
+    const name = nameInput?.value.trim() || '';
+    const email = emailInput?.value.trim() || '';
+    const subject = subjectInput?.value.trim() || '';
+    const message = messageInput?.value.trim() || '';
+
+    // Frontend validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!name) {
+      setContactStatus('Please enter your name.', 'is-error');
+      nameInput?.focus();
+      return;
+    }
+    if (!email) {
+      setContactStatus('Please enter your email address.', 'is-error');
+      emailInput?.focus();
+      return;
+    }
+    if (!emailRegex.test(email)) {
+      setContactStatus('Please enter a valid email address (e.g. name@example.com).', 'is-error');
+      emailInput?.focus();
+      return;
+    }
+    if (!subject) {
+      setContactStatus('Please enter a subject for your message.', 'is-error');
+      subjectInput?.focus();
+      return;
+    }
+    if (!message) {
+      setContactStatus('Please enter a message.', 'is-error');
+      messageInput?.focus();
+      return;
+    }
+
+    const csrf = getCsrfToken();
+    const payload = {
+      name,
+      email,
+      subject,
+      message,
+      website: contactForm.querySelector('#website')?.value || '',
+    };
+
+    // UI Loading state
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.setAttribute('aria-busy', 'true');
+      submitBtn.innerHTML = 'Sending… <span aria-hidden="true">⏳</span>';
+    }
+    setContactStatus('Sending your message…', 'is-loading');
+
     try {
-      const response = await fetch(contactForm.action, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf || '' }, body: JSON.stringify(payload), credentials: 'same-origin' });
-      const result = await response.json();
-      if (!response.ok || !result.success) throw new Error(result.error || 'Your message could not be sent. Please try again.');
+      const response = await fetch(contactForm.action || '/api/contact/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrf,
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify(payload),
+        credentials: 'same-origin',
+      });
+
+      const result = await response.json().catch(() => ({}));
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Your message could not be delivered. Please try again.');
+      }
+
       contactForm.reset();
-      if (contactStatus) contactStatus.textContent = result.message;
+      setContactStatus(result.message || 'Thank you! Your message has been sent successfully.', 'is-success');
     } catch (error) {
-      if (contactStatus) contactStatus.textContent = error.message || 'A connection error occurred. Please try again.';
+      setContactStatus(error.message || 'A network error occurred. Please try again.', 'is-error');
     } finally {
-      if (submit) { submit.disabled = false; submit.removeAttribute('aria-busy'); }
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.removeAttribute('aria-busy');
+        submitBtn.innerHTML = 'Send message <span>↗</span>';
+      }
     }
   });
 
-  // Portfolio assistant history is kept in this page session; only the new
-  // question is sent to the Django endpoint, which grounds replies in portfolio facts.
+  function setContactStatus(text, statusClass) {
+    if (!contactStatus) return;
+    contactStatus.className = `contact-status ${statusClass || ''}`.trim();
+    contactStatus.textContent = text;
+  }
+
+  // ==========================================
+  // GEMINI PORTFOLIO ASSISTANT CHATBOT
+  // ==========================================
   const assistant = document.querySelector('#assistant');
   const assistantLauncher = document.querySelector('.assistant-launcher');
   const assistantPanel = document.querySelector('#assistant-panel');
@@ -115,34 +203,122 @@
   const assistantForm = document.querySelector('#assistant-form');
   const assistantInput = document.querySelector('#assistant-input');
   const assistantMessages = document.querySelector('#assistant-messages');
+  const assistantSubmit = assistantForm?.querySelector('button[type="submit"]');
+
+  // Local conversation history for multi-turn context
+  let conversationHistory = [];
+
   function openAssistant() {
-    assistant?.classList.add('is-open'); assistantLauncher?.setAttribute('aria-expanded', 'true');
-    assistantPanel?.setAttribute('aria-hidden', 'false'); assistantInput?.focus();
+    assistant?.classList.add('is-open');
+    assistantLauncher?.setAttribute('aria-expanded', 'true');
+    assistantPanel?.setAttribute('aria-hidden', 'false');
+    assistantInput?.focus();
   }
+
   function closeAssistant() {
     if (!assistant?.classList.contains('is-open')) return;
-    assistant.classList.remove('is-open'); assistantLauncher?.setAttribute('aria-expanded', 'false');
-    assistantPanel?.setAttribute('aria-hidden', 'true'); assistantLauncher?.focus();
+    assistant.classList.remove('is-open');
+    assistantLauncher?.setAttribute('aria-expanded', 'false');
+    assistantPanel?.setAttribute('aria-hidden', 'true');
+    assistantLauncher?.focus();
   }
-  assistantLauncher?.addEventListener('click', () => assistant.classList.contains('is-open') ? closeAssistant() : openAssistant());
+
+  assistantLauncher?.addEventListener('click', () => {
+    assistant.classList.contains('is-open') ? closeAssistant() : openAssistant();
+  });
   assistantClose?.addEventListener('click', closeAssistant);
-  document.querySelectorAll('.suggested-questions button').forEach(button => button.addEventListener('click', () => { if (assistantInput) { assistantInput.value = button.textContent.trim(); assistantForm?.requestSubmit(); } }));
-  function addChatMessage(text, role) {
-    const node = document.createElement('p'); node.className = `chat-message ${role}`; node.textContent = text; assistantMessages?.append(node); node.scrollIntoView({ block: 'nearest' }); return node;
+
+  // Suggested questions quick action
+  document.querySelectorAll('.suggested-questions button').forEach(button => {
+    button.addEventListener('click', () => {
+      if (assistantInput) {
+        assistantInput.value = button.textContent.trim();
+        assistantForm?.requestSubmit();
+      }
+    });
+  });
+
+  function addChatMessage(text, role, isError = false) {
+    const node = document.createElement('p');
+    node.className = `chat-message ${role}${isError ? ' is-error' : ''}`;
+    node.textContent = text;
+    assistantMessages?.append(node);
+    node.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    return node;
   }
+
+  function createTypingIndicator() {
+    const typing = document.createElement('p');
+    typing.className = 'assistant-typing';
+    typing.innerHTML = 'Thinking<span class="assistant-typing-dots"><span></span><span></span><span></span></span>';
+    assistantMessages?.append(typing);
+    typing.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    return typing;
+  }
+
   assistantForm?.addEventListener('submit', async event => {
     event.preventDefault();
     const message = assistantInput?.value.trim();
     if (!message) return;
-    addChatMessage(message, 'user'); assistantInput.value = '';
-    const suggestions = assistantMessages?.querySelector('.suggested-questions'); suggestions?.remove();
-    const typing = document.createElement('p'); typing.className = 'assistant-typing'; typing.textContent = 'Thinking…'; assistantMessages?.append(typing); typing.scrollIntoView({ block: 'nearest' });
-    const csrf = document.querySelector('[name="csrfmiddlewaretoken"]')?.value;
+
+    // Remove suggested questions once the user starts chatting
+    const suggestions = assistantMessages?.querySelector('.suggested-questions');
+    suggestions?.remove();
+
+    // Render user message and clear input
+    addChatMessage(message, 'user');
+    assistantInput.value = '';
+
+    // Disable inputs while generating response
+    if (assistantInput) assistantInput.disabled = true;
+    if (assistantSubmit) assistantSubmit.disabled = true;
+
+    // Show loading typing animation
+    const typingNode = createTypingIndicator();
+
+    const csrf = getCsrfToken();
+
     try {
-      const response = await fetch('/api/assistant/', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf || '' }, credentials: 'same-origin', body: JSON.stringify({ message }) });
-      const result = await response.json(); typing.remove();
-      if (!response.ok || !result.success) throw new Error(result.error || 'The assistant is unavailable.');
+      const response = await fetch('/api/assistant/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrf,
+          'Accept': 'application/json',
+        },
+        credentials: 'same-origin',
+        body: JSON.stringify({
+          message,
+          history: conversationHistory,
+        }),
+      });
+
+      const result = await response.json().catch(() => ({}));
+      typingNode.remove();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'The assistant is temporarily unavailable. Please try again.');
+      }
+
       addChatMessage(result.answer, 'bot');
-    } catch (error) { typing.remove(); addChatMessage(error.message || 'The assistant is unavailable. Please use the contact form.', 'bot'); }
+
+      // Update multi-turn history
+      conversationHistory.push({ role: 'user', text: message });
+      conversationHistory.push({ role: 'model', text: result.answer });
+      if (conversationHistory.length > 10) {
+        conversationHistory = conversationHistory.slice(-10);
+      }
+    } catch (error) {
+      typingNode.remove();
+      addChatMessage(error.message || 'The assistant is temporarily unavailable. Please use the contact form.', 'bot', true);
+    } finally {
+      if (assistantInput) {
+        assistantInput.disabled = false;
+        assistantInput.focus();
+      }
+      if (assistantSubmit) {
+        assistantSubmit.disabled = false;
+      }
+    }
   });
 })();
