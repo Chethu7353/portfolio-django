@@ -16,6 +16,7 @@ from django.shortcuts import render
 from django.utils.html import strip_tags
 from google import genai
 from google.genai import errors, types
+import resend
 
 from .models import Contact
 
@@ -209,41 +210,88 @@ def contact_api(request):
     cache.set(dup_cache_key, True, 300)
     logger.info("Saved contact message record ID %s from %s", contact_record.id, email)
 
-    # 2. Attempt email notification delivery via SMTP if configured
-    recipient = getattr(settings, "CONTACT_RECEIVER_EMAIL", "") or getattr(settings, "CONTACT_RECIPIENT", "")
-    from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "") or getattr(settings, "EMAIL_HOST_USER", "")
-    smtp_host = getattr(settings, "EMAIL_HOST", "")
+    # 2. Attempt email notification delivery via Resend HTTP API (HTTPS port 443)
+    resend_api_key = (getattr(settings, "RESEND_API_KEY", "") or os.environ.get("RESEND_API_KEY", "")).strip()
+    recipient = (getattr(settings, "CONTACT_RECEIVER_EMAIL", "") or getattr(settings, "CONTACT_RECIPIENT", "") or os.environ.get("CONTACT_RECEIVER_EMAIL", "")).strip()
+    from_email = (getattr(settings, "DEFAULT_FROM_EMAIL", "") or os.environ.get("DEFAULT_FROM_EMAIL", "onboarding@resend.dev")).strip()
 
-    if recipient and from_email and smtp_host:
-        try:
-            email_subject = f"Portfolio Contact: {subject}"
-            email_body = (
-                f"You received a new message from your portfolio contact form:\n\n"
-                f"Name: {name}\n"
-                f"Email: {email}\n"
-                f"Subject: {subject}\n\n"
-                f"Message:\n{message}\n\n"
-                f"---\n"
-                f"Record ID: {contact_record.id}\n"
-            )
-            send_mail(
-                subject=email_subject,
-                message=email_body,
-                from_email=from_email,
-                recipient_list=[recipient],
-                fail_silently=False,
-            )
-            logger.info("Successfully delivered contact notification email for record ID %s", contact_record.id)
-        except Exception as mail_err:
-            # Gracefully handle email failure without exposing credentials or failing the user's request
-            logger.error(
-                "Contact email delivery failed for record ID %s (%s): %s",
-                contact_record.id,
-                type(mail_err).__name__,
-                str(mail_err),
-            )
+    if not resend_api_key or not recipient:
+        logger.error(
+            "Resend email delivery unconfigured for record ID %s: missing RESEND_API_KEY or recipient.",
+            contact_record.id,
+        )
+        return JsonResponse(
+            {
+                "success": False,
+                "error": "Email delivery service is currently unconfigured. Your message has been saved, but the site owner could not be notified immediately.",
+            },
+            status=503,
+        )
 
-    return JsonResponse({"success": True, "message": "Thank you! Your message has been sent successfully."})
+    try:
+        resend.api_key = resend_api_key
+        email_subject = f"Portfolio Contact: {subject}"
+        email_body = (
+            f"You received a new message from your portfolio contact form:\n\n"
+            f"Name: {name}\n"
+            f"Email: {email}\n"
+            f"Subject: {subject}\n\n"
+            f"Message:\n{message}\n\n"
+            f"---\n"
+            f"Record ID: {contact_record.id}\n"
+        )
+        email_html = (
+            f"<div style='font-family: sans-serif; line-height: 1.6; color: #222; max-width: 600px; padding: 15px; border: 1px solid #e5e7eb; border-radius: 8px;'>"
+            f"<h2 style='color: #111; margin-top: 0;'>New Contact Message</h2>"
+            f"<p><strong>From:</strong> {name} (&lt;{email}&gt;)</p>"
+            f"<p><strong>Subject:</strong> {subject}</p>"
+            f"<div style='background: #f9fafb; padding: 14px; border-radius: 6px; border: 1px solid #e5e7eb; white-space: pre-wrap; font-size: 14px;'>{message}</div>"
+            f"<p style='font-size: 12px; color: #6b7280; margin-top: 18px; margin-bottom: 0;'>Stored in database under Record ID: {contact_record.id}</p>"
+            f"</div>"
+        )
+
+        email_params = {
+            "from": from_email,
+            "to": [recipient],
+            "reply_to": email,
+            "subject": email_subject,
+            "text": email_body,
+            "html": email_html,
+        }
+
+        resend_resp = resend.Emails.send(email_params)
+
+        # Confirm Resend response contains valid message ID
+        email_id = None
+        if isinstance(resend_resp, dict):
+            email_id = resend_resp.get("id")
+        elif hasattr(resend_resp, "id"):
+            email_id = getattr(resend_resp, "id", None)
+
+        if not email_id:
+            raise ValueError("Resend API did not return a valid email ID.")
+
+        logger.info(
+            "Successfully delivered contact notification email via Resend for record ID %s (Resend ID: %s)",
+            contact_record.id,
+            email_id,
+        )
+        return JsonResponse({"success": True, "message": "Thank you! Your message has been sent successfully."})
+
+    except Exception as mail_err:
+        logger.error(
+            "Resend email delivery failed for record ID %s (%s): %s",
+            contact_record.id,
+            type(mail_err).__name__,
+            str(mail_err),
+        )
+        return JsonResponse(
+            {
+                "success": False,
+                "error": "Failed to deliver email notification. Your message was saved, but the email service encountered an error. Please try again or reach out directly.",
+            },
+            status=502,
+        )
 
 
 def _build_sanitized_conversation(history_items, current_question):

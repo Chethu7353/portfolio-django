@@ -6,6 +6,9 @@ from django.template.context import BaseContext
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from google.genai import errors
+import requests
+import resend
+from resend.exceptions import InvalidApiKeyError
 
 from .models import Contact
 from .views import GITHUB_FALLBACK
@@ -76,7 +79,15 @@ class ContactEndpointTests(TestCase):
         response = client.post(reverse("contact_api"), data="{}", content_type="application/json")
         self.assertEqual(response.status_code, 403)
 
-    def test_contact_saves_valid_message_and_persists_in_database(self):
+    @override_settings(
+        RESEND_API_KEY="re_test_mock_api_key_12345",
+        DEFAULT_FROM_EMAIL="onboarding@resend.dev",
+        CONTACT_RECEIVER_EMAIL="owner@example.com",
+    )
+    @patch("contact.views.resend.Emails.send")
+    def test_contact_successful_resend_email_submission(self, mock_resend_send):
+        mock_resend_send.return_value = {"id": "resend_msg_test_id_987"}
+
         response = self.client.post(
             reverse("contact_api"),
             data=json.dumps({
@@ -96,53 +107,116 @@ class ContactEndpointTests(TestCase):
         self.assertEqual(record.subject, "Freelance Opportunity")
         self.assertIn("Freelance Opportunity", str(record))
 
-    @override_settings(
-        CONTACT_RECEIVER_EMAIL="owner@example.com",
-        DEFAULT_FROM_EMAIL="sender@example.com",
-        EMAIL_HOST="smtp.example.com",
-    )
-    @patch("contact.views.send_mail")
-    def test_contact_sends_email_when_smtp_configured(self, mock_send_mail):
-        response = self.client.post(
-            reverse("contact_api"),
-            data=json.dumps({
-                "name": "Alex",
-                "email": "alex@example.com",
-                "subject": "Collaboration",
-                "message": "Let's collaborate on an open source project.",
-            }),
-            content_type="application/json",
-        )
-        self.assertEqual(response.status_code, 200)
-        self.assertTrue(mock_send_mail.called)
-        call_kwargs = mock_send_mail.call_args[1]
-        self.assertEqual(call_kwargs["recipient_list"], ["owner@example.com"])
-        self.assertEqual(call_kwargs["from_email"], "sender@example.com")
-        self.assertIn("Collaboration", call_kwargs["subject"])
-        self.assertIn("Alex", call_kwargs["message"])
+        # Verify Resend SDK was called via HTTPS with correct payload
+        self.assertTrue(mock_resend_send.called)
+        call_params = mock_resend_send.call_args[0][0]
+        self.assertEqual(call_params["from"], "onboarding@resend.dev")
+        self.assertEqual(call_params["to"], ["owner@example.com"])
+        self.assertEqual(call_params["reply_to"], "jane@example.com")
+        self.assertIn("Freelance Opportunity", call_params["subject"])
+        self.assertIn("Jane Doe", call_params["text"])
+        self.assertIn("Record ID:", call_params["text"])
 
     @override_settings(
+        RESEND_API_KEY="re_test_mock_api_key_12345",
         CONTACT_RECEIVER_EMAIL="owner@example.com",
-        DEFAULT_FROM_EMAIL="sender@example.com",
-        EMAIL_HOST="smtp.example.com",
     )
-    @patch("contact.views.send_mail", side_effect=Exception("SMTP Connection Error"))
-    def test_contact_gracefully_handles_email_delivery_failure(self, mock_send_mail):
-        """When SMTP fails, message must still be saved to the database and not return 500."""
+    @patch("contact.views.resend.Emails.send")
+    def test_contact_resend_api_failure_preserves_record_and_returns_error(self, mock_resend_send):
+        """When Resend API rejects request, message must still be saved to DB and return 502."""
+        mock_resend_send.side_effect = InvalidApiKeyError(
+            message="API key is invalid",
+            error_type="invalid_api_key",
+            code=401,
+        )
+
         response = self.client.post(
             reverse("contact_api"),
             data=json.dumps({
                 "name": "Alex",
                 "email": "alex@example.com",
                 "subject": "Project Proposal",
-                "message": "Testing SMTP failure resiliency.",
+                "message": "Testing Resend API failure resiliency.",
             }),
             content_type="application/json",
         )
-        self.assertEqual(response.status_code, 200)
-        self.assertTrue(response.json()["success"])
+        self.assertEqual(response.status_code, 502)
+        self.assertFalse(response.json()["success"])
+        self.assertIn("saved", response.json()["error"].lower())
+        # Record MUST remain preserved in database
         self.assertEqual(Contact.objects.count(), 1)
         self.assertEqual(Contact.objects.first().subject, "Project Proposal")
+
+    @override_settings(RESEND_API_KEY="")
+    @patch.dict("os.environ", {"RESEND_API_KEY": ""})
+    def test_contact_missing_resend_api_key_preserves_record_and_returns_503(self):
+        """When RESEND_API_KEY is not configured, message must be saved to DB and return 503."""
+        response = self.client.post(
+            reverse("contact_api"),
+            data=json.dumps({
+                "name": "Sarah",
+                "email": "sarah@example.com",
+                "subject": "Unconfigured Service",
+                "message": "Testing unconfigured Resend key.",
+            }),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 503)
+        self.assertFalse(response.json()["success"])
+        self.assertIn("unconfigured", response.json()["error"].lower())
+        # Record MUST remain preserved in database
+        self.assertEqual(Contact.objects.count(), 1)
+        self.assertEqual(Contact.objects.first().name, "Sarah")
+
+    @override_settings(
+        RESEND_API_KEY="re_test_mock_api_key_12345",
+        CONTACT_RECEIVER_EMAIL="owner@example.com",
+    )
+    @patch("contact.views.resend.Emails.send")
+    def test_contact_resend_invalid_response_preserves_record(self, mock_resend_send):
+        """If Resend returns a response without an ID, return 502 and preserve the record."""
+        mock_resend_send.return_value = {}  # Empty dict without 'id'
+
+        response = self.client.post(
+            reverse("contact_api"),
+            data=json.dumps({
+                "name": "David",
+                "email": "david@example.com",
+                "subject": "Invalid API Response",
+                "message": "Testing invalid response handling.",
+            }),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 502)
+        self.assertFalse(response.json()["success"])
+        # Record MUST remain preserved in database
+        self.assertEqual(Contact.objects.count(), 1)
+        self.assertEqual(Contact.objects.first().name, "David")
+
+    @override_settings(
+        RESEND_API_KEY="re_test_mock_api_key_12345",
+        CONTACT_RECEIVER_EMAIL="owner@example.com",
+    )
+    @patch("contact.views.resend.Emails.send")
+    def test_contact_resend_network_exception_preserves_record(self, mock_resend_send):
+        """If a network error occurs during HTTPS request, return 502 and preserve record."""
+        mock_resend_send.side_effect = requests.exceptions.ConnectionError("Network is unreachable")
+
+        response = self.client.post(
+            reverse("contact_api"),
+            data=json.dumps({
+                "name": "Elena",
+                "email": "elena@example.com",
+                "subject": "Network Issue",
+                "message": "Testing network connection error handling.",
+            }),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 502)
+        self.assertFalse(response.json()["success"])
+        # Record MUST remain preserved in database
+        self.assertEqual(Contact.objects.count(), 1)
+        self.assertEqual(Contact.objects.first().name, "Elena")
 
     def test_contact_rejects_invalid_email(self):
         response = self.client.post(
@@ -172,7 +246,12 @@ class ContactEndpointTests(TestCase):
         self.assertEqual(res.status_code, 400)
         self.assertEqual(Contact.objects.count(), 0)
 
-    def test_contact_prevents_duplicate_submissions(self):
+    @override_settings(
+        RESEND_API_KEY="re_test_mock_api_key_12345",
+        CONTACT_RECEIVER_EMAIL="owner@example.com",
+    )
+    @patch("contact.views.resend.Emails.send", return_value={"id": "resend_dup_test"})
+    def test_contact_prevents_duplicate_submissions(self, mock_send):
         payload = json.dumps({
             "name": "Repeat Visitor",
             "email": "repeat@example.com",
@@ -205,7 +284,12 @@ class ContactEndpointTests(TestCase):
         # Bot message must NOT be saved to the database
         self.assertEqual(Contact.objects.count(), 0)
 
-    def test_contact_rate_limiting(self):
+    @override_settings(
+        RESEND_API_KEY="re_test_mock_api_key_12345",
+        CONTACT_RECEIVER_EMAIL="owner@example.com",
+    )
+    @patch("contact.views.resend.Emails.send", return_value={"id": "resend_rate_limit"})
+    def test_contact_rate_limiting(self, mock_send):
         for i in range(5):
             payload = json.dumps({
                 "name": f"User {i}",

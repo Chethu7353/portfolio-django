@@ -128,7 +128,13 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-# Mail credentials are supplied through deployment environment variables.
+# Resend HTTP API Email Configuration (HTTPS instead of SMTP for Render compatibility)
+RESEND_API_KEY = os.environ.get('RESEND_API_KEY', '').strip()
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', '').strip() or 'onboarding@resend.dev'
+CONTACT_RECEIVER_EMAIL = (os.environ.get('CONTACT_RECEIVER_EMAIL') or os.environ.get('CONTACT_RECIPIENT', '')).strip()
+CONTACT_RECIPIENT = CONTACT_RECEIVER_EMAIL
+
+# Fallback SMTP settings if needed
 EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
 EMAIL_HOST = os.environ.get('EMAIL_HOST', '')
 EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
@@ -138,9 +144,6 @@ if EMAIL_USE_SSL and EMAIL_USE_TLS:
     EMAIL_USE_TLS = False
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '').strip()
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '').strip().replace(' ', '')
-DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', '') or EMAIL_HOST_USER or 'webmaster@localhost'
-CONTACT_RECEIVER_EMAIL = os.environ.get('CONTACT_RECEIVER_EMAIL', os.environ.get('CONTACT_RECIPIENT', ''))
-CONTACT_RECIPIENT = CONTACT_RECEIVER_EMAIL
 EMAIL_TIMEOUT = int(os.environ.get('EMAIL_TIMEOUT', '10'))
 
 # Gemini Assistant Configuration
